@@ -55,68 +55,81 @@ def linear_interpolation(x, y, verbose=False):
 def quadratic_interpolation(x, y, verbose=False):
     y_interp = y.copy()
     interpolation_info = {}
-    
+
+    # Получаем индексы всех известных (не NaN) точек
+    valid_indices = [i for i in range(len(y)) if y[i] == y[i]]
+
     for i in range(len(y_interp)):
-        if y_interp[i] != y_interp[i]:
-            valid_points = []
-            for j in range(len(y_interp)):
-                if y_interp[j] == y_interp[j]:
-                    valid_points.append(j)
-            
-            closest = sorted(valid_points, key=lambda j: abs(x[j] - x[i]))[:3]
-            closest = sorted(closest)
-            
-            if len(closest) >= 3:
-                x0, x1, x2 = x[closest[0]], x[closest[1]], x[closest[2]]
-                y0, y1, y2 = y_interp[closest[0]], y_interp[closest[1]], y_interp[closest[2]]
-                
-                #  Метод Крамера!
-                det = (x0**2 * (x1 - x2)) + (x0 * (x2**2 - x1**2)) + (x1**2 * x2 - x2**2 * x1)
-                det_a = y0 * (x1 - x2) + y1 * (x2 - x0) + y2 * (x0 - x1)
-                det_b = x0**2 * (y1 - y2) + y0 * (x2**2 - x1**2) + x1**2 * y2 - x2**2 * y1
-                det_c = x0**2 * (x1 * y2 - x2 * y1) + x0 * (x2**2 * y1 - x1**2 * y2) + y0 * (x1**2 * x2 - x2**2 * x1)
-                
-                a = det_a / det
-                b = det_b / det
-                c = det_c / det
-                
-                y_interp[i] = a * x[i]**2 + b * x[i] + c
-                
-                info = {
-                    'x': x[i],
-                    'used_points': [(x[closest[0]], y[closest[0]]), 
-                                (x[closest[1]], y[closest[1]]), 
-                                (x[closest[2]], y[closest[2]])],
-                    'interpolated_value': y_interp[i],
-                    'method': 'quadratic',
-                    'coefficients': {'a': a, 'b': b, 'c': c}
-                }
-                interpolation_info[i] = info
-                
-                if verbose:
-                    print(f"Точка x={x[i]}: использованы точки (x={x[closest[0]]}, y={y[closest[0]]}), "
-                          f"(x={x[closest[1]]}, y={y[closest[1]]}), (x={x[closest[2]]}, y={y[closest[2]]})")
-                    print(f"Коэффициенты: a={a:.4f}, b={b:.4f}, c={c:.4f}")
-                    print(f"Результат интерполяции: {y_interp[i]:.2f}\n")
-                
-            elif len(closest) >= 2:
-                # Линейная интерполяция, если не хватает точек
-                left, right = closest[0], closest[-1]
-                y_interp[i] = y_interp[left] + (y_interp[right] - y_interp[left]) * (x[i] - x[left]) / (x[right] - x[left])
-                
-                info = {
-                    'x': x[i],
-                    'used_points': [(x[left], y[left]), (x[right], y[right])],
-                    'interpolated_value': y_interp[i],
-                    'method': 'linear (fallback)'
-                }
-                interpolation_info[i] = info
-                
-                if verbose:
-                    print(f"Точка x={x[i]}: недостаточно точек для квадратичной интерполяции")
-                    print(f"Использована линейная интерполяция между (x={x[left]}, y={y[left]}) и (x={x[right]}, y={y[right]})")
-                    print(f"Результат интерполяции: {y_interp[i]:.2f}\n")
-    
+        if y_interp[i] != y_interp[i]:  # Если NaN
+            left_points = sorted(
+                [(j, abs(x[j] - x[i])) for j in valid_indices if x[j] < x[i]],
+                key=lambda p: p[1]
+            )
+            right_points = sorted(
+                [(j, abs(x[j] - x[i])) for j in valid_indices if x[j] > x[i]],
+                key=lambda p: p[1]
+            )
+
+            left_candidates = [j for j, _ in left_points[:2]]
+            right_candidates = [j for j, _ in right_points[:2]]
+
+            candidates = []
+            candidates.extend(left_candidates)
+            candidates.extend(right_candidates)
+
+            while len(candidates) < 3 and (left_points or right_points):
+                if left_points:
+                    extra = left_points.pop(0)[0]
+                    if extra not in candidates:
+                        candidates.append(extra)
+                elif right_points:
+                    extra = right_points.pop(0)[0]
+                    if extra not in candidates:
+                        candidates.append(extra)
+
+            if len(candidates) < 3:
+                continue
+
+            unique_x = set(x[j] for j in candidates[:3])
+            if len(unique_x) < 2:
+                continue
+
+            points = [(x[j], y_interp[j]) for j in candidates[:3]]
+            x0, y0 = points[0]
+            x1, y1 = points[1]
+            x2, y2 = points[2]
+
+            det = (x0**2 * (x1 - x2)) + (x0 * (x2**2 - x1**2)) + (x1**2 * x2 - x2**2 * x1)
+            if det == 0:
+                continue
+
+            det_a = y0 * (x1 - x2) + y1 * (x2 - x0) + y2 * (x0 - x1)
+            det_b = x0**2 * (y1 - y2) + y0 * (x2**2 - x1**2) + x1**2 * y2 - x2**2 * y1
+            det_c = x0**2 * (x1 * y2 - x2 * y1) + x0 * (x2**2 * y1 - x1**2 * y2) + y0 * (x1**2 * x2 - x2**2 * x1)
+
+            a = det_a / det
+            b = det_b / det
+            c = det_c / det
+
+            interpolated = a * x[i]**2 + b * x[i] + c
+            y_interp[i] = interpolated
+
+            info = {
+                'x': x[i],
+                'used_points': points,
+                'interpolated_value': interpolated,
+                'method': 'quadratic',
+                'coefficients': {'a': a, 'b': b, 'c': c}
+            }
+            interpolation_info[i] = info
+
+            if verbose:
+                print(f"Точка x={x[i]}: использованы точки:")
+                for pt in points:
+                    print(f"  (x={pt[0]}, y={pt[1]:.2f})")
+                print(f"Коэффициенты: a={a:.4f}, b={b:.4f}, c={c:.4f}")
+                print(f"Результат интерполяции: {interpolated:.2f}\n")
+
     return y_interp, interpolation_info
 
 def save_results(filename, data):
