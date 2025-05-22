@@ -40,6 +40,7 @@ def write_output(
         file.write("Производная:\n")
         file.write(", ".join(f"{value:.4f}" for value in derivative_values) + "\n")
         file.write(f"Интеграл: {total_area:.4f}\n")
+        
 data_dir = Path(__file__).parent / 'data'
 x_path = data_dir / 'xc.dat'
 

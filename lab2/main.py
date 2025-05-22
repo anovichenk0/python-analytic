@@ -3,10 +3,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from pathlib import Path
 
-data = pd.read_csv("data/company_sales_data.csv")
+path = Path(__file__).parent / 'data' / 'company_sales_data.csv'
+data = pd.read_csv(path)
 
-# Задание 1 - общая прибыль
 plt.figure()
 plt.plot(data['month_number'], data['total_profit'], color='blue', linewidth=2)
 plt.xlabel("Month number")
@@ -16,7 +17,7 @@ plt.ylim([100000, 500000])
 plt.grid(True)
 plt.savefig("task1.png")
 plt.show()
-# Задание 2 - линейный график со свойствами стилей
+
 plt.figure()
 plt.plot(
     data['month_number'],
@@ -35,7 +36,7 @@ plt.legend(loc='lower right')
 plt.grid(True)
 plt.savefig("task2.png")
 plt.show()
-# Задание 3 (общий график)
+
 plt.figure()
 plt.plot(data['month_number'], data['facecream'], label='Face cream Sales Data', marker='o')
 plt.plot(data['month_number'], data['facewash'], label='Face Wash Sales Data', marker='o')
@@ -51,8 +52,6 @@ plt.grid(True)
 plt.savefig("task3_1.png")
 plt.show()
 
-# Задание 3 (два графика).
-# Bathingsoap 
 fig = plt.figure()
 plt.plot(data['month_number'], data['bathingsoap'], color='black', marker='o')
 plt.title("Sales data of a Bathingsoap")
@@ -62,7 +61,6 @@ plt.grid(True)
 fig.savefig("task3_2_bathingsoap.png")
 
 
-# Facewash
 fig = plt.figure()
 plt.plot(data['month_number'], data['facewash'], color='red', marker='o')
 plt.title("Sales data of a facewash")
@@ -72,7 +70,6 @@ plt.grid(True)
 fig.savefig("task3_2_facewash.png")
 plt.show()
 
-# Задание 4 - Точечный график
 plt.figure()
 plt.scatter(data['month_number'], data['toothpaste'], label='Tooth paste Sales data', color='blue')
 plt.xlabel("Month Number")
@@ -83,7 +80,6 @@ plt.legend()
 plt.savefig("task4.png")
 plt.show()
 
-## Задание 5 - Столбцы
 
 plt.figure()
 bar_width = 0.4
@@ -102,7 +98,7 @@ plt.grid(True, axis='y', linestyle='--')
 plt.savefig("task5.png")
 plt.show()
 
-# Задание 6 - круговая диаграмма о продажах за год
+
 plt.figure()
 
 product_labels = ['FaceCream', 'FaseWash', 'ToothPaste', 'Bathing soap', 'Shampoo', 'Moisturizer']
@@ -116,7 +112,6 @@ plt.legend(product_labels, loc='lower right')
 plt.savefig("task6.png")
 plt.show()
 
-# Задание 7 - stacked plot
 plt.figure()
 
 months = data['month_number']
@@ -133,19 +128,18 @@ plt.legend(loc='upper left')
 plt.savefig("task7.png")
 plt.show()
 
-# Задание 8 - заготовка для графиков (Тут я сделал заготовку, не как в документе. Сделано для возможной дальнейшей визуализации всех полученных графиков в одном шаблоне)
 import matplotlib.gridspec as gridspec
 
-fig = plt.figure(figsize=(14, 12))
+fig = plt.figure(figsize=(16, 16))
 gs = gridspec.GridSpec(4, 2, figure=fig)
 
 for i in range(4):
     for j in range(2):
         ax = fig.add_subplot(gs[i, j])
-        ax.set_title(f"Слот {i * 2 + j + 1}")
+        ax.set_title(f"{i * 2 + j + 1}")
         ax.axis('on')
 
-fig.suptitle("Заготовка для расположения графиков", fontsize=16)
+fig.suptitle("Заготовочка", fontsize=22)
 plt.tight_layout()
 plt.savefig("task8.png")
 plt.show()
